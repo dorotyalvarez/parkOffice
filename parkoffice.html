@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ParkOffice</title>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<!-- EmailJS -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  /* ── CONFIGURACIÓN ─────────────────────────── */
+  /* 👉 CAMBIA ESTOS VALORES: */
+  /* En el script de abajo busca FIREBASE_CONFIG y EMAILJS_CONFIG */
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green:     #1D9E75;
+    --green-dk:  #0F6E56;
+    --green-lt:  #E1F5EE;
+    --green-md:  #9FE1CB;
+    --red:       #E24B4A;
+    --red-lt:    #FCEBEB;
+    --amber:     #BA7517;
+    --amber-lt:  #FAEEDA;
+    --bg:        #0D0D0D;
+    --bg2:       #161616;
+    --bg3:       #1E1E1E;
+    --bg4:       #252525;
+    --border:    rgba(255,255,255,0.08);
+    --border2:   rgba(255,255,255,0.14);
+    --text:      #F0EEE8;
+    --text2:     #A09E98;
+    --text3:     #5C5A56;
+    --font:      'DM Sans', sans-serif;
+    --mono:      'DM Mono', monospace;
+    --radius:    14px;
+    --radius-sm: 8px;
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+  }
+
+  /* ── LAYOUT ────────────────────────────────── */
+  .app { max-width: 640px; margin: 0 auto; }
+
+  /* ── HEADER ────────────────────────────────── */
+  .header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 2rem;
+  }
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .brand-icon {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: var(--green); display: flex; align-items: center; justify-content: center;
+  }
+  .brand-icon svg { width: 20px; height: 20px; stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .brand-name { font-size: 18px; font-weight: 600; color: var(--text); letter-spacing: -0.02em; }
+  .brand-name span { color: var(--green); }
+  .date-pill {
+    font-family: var(--mono); font-size: 11px; color: var(--text3);
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 20px; padding: 5px 12px; letter-spacing: 0.03em;
+  }
+
+  /* ── STATS ─────────────────────────────────── */
+  .stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 2rem; }
+  .stat {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 16px;
+  }
+  .stat-val { font-size: 28px; font-weight: 600; letter-spacing: -0.03em; color: var(--text); line-height: 1; }
+  .stat-val.green { color: var(--green); }
+  .stat-val.red { color: var(--red); }
+  .stat-lbl { font-size: 11px; color: var(--text3); margin-top: 5px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* ── SECCIÓN ───────────────────────────────── */
+  .section { margin-bottom: 1.5rem; }
+  .section-hdr {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+  }
+  .section-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text3); }
+  .section-dot.car { background: var(--amber); }
+  .section-dot.moto { background: var(--green); }
+  .section-title { font-size: 11px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; }
+  .section-count {
+    margin-left: auto; font-family: var(--mono); font-size: 11px;
+    color: var(--text3); background: var(--bg3);
+    border: 1px solid var(--border); border-radius: 20px; padding: 2px 9px;
+  }
+
+  /* ── GRID ──────────────────────────────────── */
+  .grid-1 { display: grid; grid-template-columns: 1fr; gap: 8px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  /* ── SPOT ──────────────────────────────────── */
+  .spot {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px;
+    cursor: pointer; transition: border-color 0.2s, background 0.2s, transform 0.1s;
+    display: flex; align-items: center; gap: 12px;
+    position: relative; overflow: hidden;
+  }
+  .spot::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: transparent; border-radius: 3px 0 0 3px; transition: background 0.2s;
+  }
+  .spot.libre::before { background: var(--green); }
+  .spot.ocupado::before { background: var(--red); }
+  .spot.mio::before { background: var(--green); }
+
+  .spot:hover:not(.ocupado) {
+    border-color: var(--border2); transform: translateY(-1px);
+  }
+  .spot.ocupado { cursor: default; opacity: 0.7; }
+  .spot.mio {
+    border-color: rgba(29,158,117,0.4);
+    background: rgba(29,158,117,0.06);
+    opacity: 1;
+  }
+
+  .spot-icon {
+    width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .spot-icon svg { width: 22px; height: 22px; stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .libre .spot-icon { background: rgba(29,158,117,0.12); }
+  .libre .spot-icon svg { stroke: var(--green); }
+  .ocupado .spot-icon { background: rgba(226,75,74,0.1); }
+  .ocupado .spot-icon svg { stroke: var(--red); }
+  .mio .spot-icon { background: rgba(29,158,117,0.18); }
+  .mio .spot-icon svg { stroke: var(--green); }
+
+  .spot-info { flex: 1; min-width: 0; }
+  .spot-name { font-size: 14px; font-weight: 500; color: var(--text); }
+  .spot-sub { font-size: 12px; color: var(--text2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ocupado .spot-sub { color: var(--text3); }
+  .mio .spot-sub { color: var(--green-md); }
+
+  .spot-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
+  .badge {
+    font-size: 10px; font-weight: 500; padding: 3px 9px; border-radius: 20px;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .badge-libre { background: rgba(29,158,117,0.15); color: var(--green); }
+  .badge-ocupado { background: rgba(226,75,74,0.12); color: var(--red); }
+  .badge-mio { background: rgba(29,158,117,0.2); color: var(--green-md); }
+
+  .liberar-btn {
+    font-size: 10px; color: var(--text3); background: none; border: none;
+    cursor: pointer; text-decoration: underline; padding: 0;
+    font-family: var(--font);
+    transition: color 0.15s;
+  }
+  .liberar-btn:hover { color: var(--red); }
+
+  /* ── DIVIDER ───────────────────────────────── */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+
+  /* ── MODAL ─────────────────────────────────── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+    align-items: center; justify-content: center; z-index: 100;
+    padding: 1rem;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: 18px; padding: 2rem; width: 100%; max-width: 320px;
+    animation: slide-up 0.25s cubic-bezier(0.34,1.3,0.64,1);
+  }
+  @keyframes slide-up {
+    from { transform: translateY(20px) scale(0.97); opacity: 0; }
+    to   { transform: translateY(0) scale(1); opacity: 1; }
+  }
+
+  .modal-spot-icon {
+    width: 56px; height: 56px; border-radius: 14px; margin: 0 auto 1rem;
+    background: rgba(29,158,117,0.14); display: flex; align-items: center; justify-content: center;
+  }
+  .modal-spot-icon svg { width: 28px; height: 28px; stroke: var(--green); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .modal-title { font-size: 17px; font-weight: 600; color: var(--text); text-align: center; margin-bottom: 4px; }
+  .modal-sub { font-size: 13px; color: var(--text2); text-align: center; margin-bottom: 1.5rem; }
+
+  .modal label { font-size: 12px; color: var(--text3); display: block; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .modal input {
+    width: 100%; background: var(--bg3); border: 1px solid var(--border2);
+    border-radius: var(--radius-sm); padding: 10px 12px;
+    font-size: 14px; color: var(--text); font-family: var(--font);
+    outline: none; transition: border-color 0.15s; margin-bottom: 12px;
+  }
+  .modal input:focus { border-color: var(--green); }
+  .modal input::placeholder { color: var(--text3); }
+
+  .modal-btns { display: flex; gap: 8px; margin-top: 4px; }
+  .btn {
+    flex: 1; padding: 10px 12px; border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 500; font-family: var(--font);
+    cursor: pointer; transition: opacity 0.15s, transform 0.1s; border: none;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-cancel { background: var(--bg4); color: var(--text2); }
+  .btn-cancel:hover { opacity: 0.8; }
+  .btn-confirm { background: var(--green); color: #fff; }
+  .btn-confirm:hover { background: var(--green-dk); }
+  .btn-confirm:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ── TOAST ─────────────────────────────────── */
+  .toast {
+    position: fixed; bottom: 2rem; left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--bg3); border: 1px solid var(--border2);
+    color: var(--text); border-radius: 30px;
+    padding: 10px 20px; font-size: 13px; font-weight: 500;
+    display: flex; align-items: center; gap: 8px;
+    z-index: 200; transition: transform 0.35s cubic-bezier(0.34,1.3,0.64,1), opacity 0.35s;
+    opacity: 0; white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+  .toast-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+  .toast-dot.red { background: var(--red); }
+
+  /* ── ANIMACIONES SPOT ──────────────────────── */
+  @keyframes pop-in {
+    0%   { transform: scale(0.92); opacity: 0.5; }
+    60%  { transform: scale(1.03); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .spot.animar { animation: pop-in 0.4s cubic-bezier(0.34,1.3,0.64,1); }
+
+  /* ── LOADING ───────────────────────────────── */
+  .loading {
+    text-align: center; padding: 4rem 0; color: var(--text3); font-size: 14px;
+  }
+  .loading-dot {
+    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--green); margin: 0 2px;
+    animation: bounce 1.2s infinite ease-in-out;
+  }
+  .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce {
+    0%,80%,100% { transform: translateY(0); }
+    40% { transform: translateY(-8px); }
+  }
+
+  /* ── OFFLINE BANNER ────────────────────────── */
+  .config-banner {
+    background: rgba(186,117,23,0.1); border: 1px solid rgba(186,117,23,0.3);
+    border-radius: var(--radius); padding: 14px 16px; margin-bottom: 1.5rem;
+    font-size: 13px; color: var(--amber); display: none;
+  }
+  .config-banner.visible { display: block; }
+  .config-banner strong { display: block; margin-bottom: 4px; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <div class="header">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 3v3M17 3v3"/></svg>
+      </div>
+      <div class="brand-name">Park<span>Office</span></div>
+    </div>
+    <div class="date-pill" id="date-pill">—</div>
+  </div>
+
+  <div class="config-banner" id="cfg-banner">
+    <strong>⚙️ Configura Firebase y EmailJS</strong>
+    Abre el archivo, busca FIREBASE_CONFIG y EMAILJS_CONFIG y pega tus claves. Ver guía abajo.
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-val green" id="s-libre">—</div>
+      <div class="stat-lbl">Disponibles</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val red" id="s-ocup">—</div>
+      <div class="stat-lbl">Ocupados</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" id="s-total">5</div>
+      <div class="stat-lbl">Total</div>
+    </div>
+  </div>
+
+  <div id="main-content">
+    <div class="loading">
+      <div class="loading-dot"></div>
+      <div class="loading-dot"></div>
+      <div class="loading-dot"></div>
+    </div>
+  </div>
+
+</div><!-- .app -->
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" id="modal">
+    <div class="modal-spot-icon" id="modal-icon">
+      <svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/></svg>
+    </div>
+    <div class="modal-title" id="modal-title">Reservar puesto</div>
+    <div class="modal-sub" id="modal-sub">Ingresa tus datos para confirmar</div>
+    <label for="inp-name">Tu nombre</label>
+    <input type="text" id="inp-name" placeholder="Ej: Camila Rodríguez" maxlength="30" autocomplete="off"/>
+    <label for="inp-email">Tu correo (para notificación)</label>
+    <input type="email" id="inp-email" placeholder="tuemail@empresa.com" autocomplete="off"/>
+    <div class="modal-btns">
+      <button class="btn btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-confirm" id="btn-confirm" onclick="confirmarReserva()">Reservar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-dot" id="toast-dot"></div>
+  <span id="toast-msg"></span>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════
+   🔧 PASO 1 — FIREBASE CONFIG
+   Entra a https://console.firebase.google.com
+   Crea proyecto → Agrega app web → copia la config aquí
+   ═══════════════════════════════════════════════ */
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyBLGuzvcLTNUOSU_9NrFHTgBuUbRBpeS1o",
+  authDomain:        "parkin-c6e71.firebaseapp.com",
+  databaseURL:       "https://parkin-c6e71-default-rtdb.firebaseio.com",
+  projectId:         "parkin-c6e71",
+  storageBucket:     "parkin-c6e71.firebasestorage.app",
+  messagingSenderId: "674692362260",
+  appId:             "1:674692362260:web:1c97771b866a2862003701"
+};
+
+/* ═══════════════════════════════════════════════
+   🔧 PASO 2 — EMAILJS CONFIG
+   Entra a https://www.emailjs.com
+   Crea cuenta → Add Email Service (Gmail) → Add Template
+   Copia los IDs aquí
+   ═══════════════════════════════════════════════ */
+const EMAILJS_CONFIG = {
+  publicKey:  "Pdc2NDCbT43gFArza",
+  serviceId:  "service_vgiu9xq",
+  templateId: "template_evh4qny"
+};
+
+/* ═══════════════════════════════════════════════
+   📋 ESTRUCTURA DE PARQUEADEROS
+   Puedes cambiar los labels y agregar más spots
+   ═══════════════════════════════════════════════ */
+const STRUCTURE = [
+  {
+    id: "car",
+    title: "Parqueadero de carros",
+    dotClass: "car",
+    gridClass: "grid-1",
+    spots: [
+      { id: "c1", label: "Puesto C1", tipo: "carro" }
+    ]
+  },
+  {
+    id: "mA",
+    title: "Motos — Zona A",
+    dotClass: "moto",
+    gridClass: "grid-2",
+    spots: [
+      { id: "mA1", label: "Puesto A1", tipo: "moto" },
+      { id: "mA2", label: "Puesto A2", tipo: "moto" }
+    ]
+  },
+  {
+    id: "mB",
+    title: "Motos — Zona B",
+    dotClass: "moto",
+    gridClass: "grid-2",
+    spots: [
+      { id: "mB1", label: "Puesto B1", tipo: "moto" },
+      { id: "mB2", label: "Puesto B2", tipo: "moto" }
+    ]
+  }
+];
+
+/* ── ICONS ─────────────────────────────────── */
+const ICONS = {
+  carro: `<svg viewBox="0 0 24 24"><path d="M5 17H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1l2-3h12l2 3h1a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="17.5" r="2.5"/></svg>`,
+  moto:  `<svg viewBox="0 0 24 24"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6h2l2 5M15 6l-3 5H8.5L7 8h5"/><path d="M2 12h3.5"/></svg>`
+};
+
+/* ── ESTADO ────────────────────────────────── */
+let db = null;
+let selSpotId = null;
+let selSpotLabel = null;
+let selSpotTipo = null;
+const IS_CONFIGURED = FIREBASE_CONFIG.apiKey !== "TU_API_KEY";
+
+/* ── INIT ──────────────────────────────────── */
+window.addEventListener('DOMContentLoaded', () => {
+  const now = new Date();
+  document.getElementById('date-pill').textContent =
+    now.toLocaleDateString('es-CO', { weekday:'short', day:'numeric', month:'short' }).toUpperCase();
+
+  if (!IS_CONFIGURED) {
+    document.getElementById('cfg-banner').classList.add('visible');
+    renderDemo();
+    return;
+  }
+
+  firebase.initializeApp(FIREBASE_CONFIG);
+  emailjs.init(EMAILJS_CONFIG.publicKey);
+  db = firebase.database();
+  escucharCambios();
+});
+
+/* ── FIREBASE: escuchar cambios en tiempo real ── */
+function escucharCambios() {
+  db.ref('parkoffice').on('value', snap => {
+    const data = snap.val() || {};
+    renderUI(data);
+  });
+}
+
+/* ── RENDER ────────────────────────────────── */
+function renderUI(data) {
+  const container = document.getElementById('main-content');
+  container.innerHTML = '';
+
+  let libres = 0, ocupados = 0, total = 0;
+
+  STRUCTURE.forEach((section, si) => {
+    if (si > 0) {
+      const hr = document.createElement('hr');
+      hr.className = 'divider';
+      container.appendChild(hr);
+    }
+
+    const sec = document.createElement('div');
+    sec.className = 'section';
+
+    const libresZona = section.spots.filter(s => !data[s.id]?.ocupado).length;
+    sec.innerHTML = `
+      <div class="section-hdr">
+        <div class="section-dot ${section.dotClass}"></div>
+        <span class="section-title">${section.title}</span>
+        <span class="section-count">${libresZona}/${section.spots.length}</span>
+      </div>
+      <div class="${section.gridClass}" id="grid-${section.id}"></div>
+    `;
+    container.appendChild(sec);
+
+    const grid = sec.querySelector(`#grid-${section.id}`);
+    section.spots.forEach(s => {
+      const st = data[s.id] || {};
+      const esMio = st.ocupado && st.esMio;
+      const cls = esMio ? 'mio' : st.ocupado ? 'ocupado' : 'libre';
+      const badgeCls = 'badge-' + cls;
+      const badgeTxt = esMio ? 'Tuyo' : st.ocupado ? 'Ocupado' : 'Libre';
+      const subTxt = esMio ? `Reservado por ti` : st.ocupado ? (st.nombre || 'Ocupado') : 'Toca para reservar';
+
+      const el = document.createElement('div');
+      el.className = `spot ${cls}`;
+      el.id = `spot-${s.id}`;
+      el.innerHTML = `
+        <div class="spot-icon">${ICONS[s.tipo]}</div>
+        <div class="spot-info">
+          <div class="spot-name">${s.label}</div>
+          <div class="spot-sub">${subTxt}</div>
+        </div>
+        <div class="spot-right">
+          <span class="badge ${badgeCls}">${badgeTxt}</span>
+          ${esMio ? `<button class="liberar-btn" onclick="liberarPuesto('${s.id}',event)">Liberar</button>` : ''}
+        </div>
+      `;
+      if (!st.ocupado) el.onclick = () => abrirModal(s.id, s.label, s.tipo);
+      grid.appendChild(el);
+
+      total++;
+      st.ocupado ? ocupados++ : libres++;
+    });
+  });
+
+  document.getElementById('s-libre').textContent = libres;
+  document.getElementById('s-ocup').textContent = ocupados;
+  document.getElementById('s-total').textContent = total;
+}
+
+/* ── DEMO (sin Firebase) ───────────────────── */
+function renderDemo() {
+  const fakeData = { mA2: { ocupado: true, nombre: 'Camila R.', esMio: false } };
+  renderUI(fakeData);
+}
+
+/* ── MODAL ─────────────────────────────────── */
+function abrirModal(id, label, tipo) {
+  selSpotId = id; selSpotLabel = label; selSpotTipo = tipo;
+  document.getElementById('modal-icon').innerHTML = ICONS[tipo];
+  document.getElementById('modal-title').textContent = `Reservar ${label}`;
+  document.getElementById('modal-sub').textContent = 'Ingresa tus datos para confirmar la reserva';
+  document.getElementById('inp-name').value = '';
+  document.getElementById('inp-email').value = '';
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('inp-name').focus(), 80);
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  selSpotId = null;
+}
+
+/* ── CONFIRMAR RESERVA ─────────────────────── */
+async function confirmarReserva() {
+  const nombre = document.getElementById('inp-name').value.trim();
+  const email  = document.getElementById('inp-email').value.trim();
+  if (!nombre || !email) {
+    sacudirModal(); return;
+  }
+
+  const btn = document.getElementById('btn-confirm');
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+
+  try {
+    if (IS_CONFIGURED) {
+      await db.ref(`parkoffice/${selSpotId}`).set({
+        ocupado: true, nombre, email,
+        esMio: true,
+        hora: new Date().toLocaleTimeString('es-CO', { hour:'2-digit', minute:'2-digit' }),
+        fecha: new Date().toLocaleDateString('es-CO')
+      });
+      await enviarCorreo(nombre, email, selSpotLabel);
+    }
+    closeModal();
+    setTimeout(() => {
+      const el = document.getElementById(`spot-${selSpotId}`);
+      if (el) { el.classList.add('animar'); setTimeout(() => el.classList.remove('animar'), 500); }
+    }, 100);
+    showToast(`Puesto apartado para ${nombre}`, false);
+  } catch(e) {
+    console.error(e);
+    showToast('Error al guardar. Intenta de nuevo.', true);
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Reservar';
+}
+
+/* ── LIBERAR ───────────────────────────────── */
+async function liberarPuesto(id, e) {
+  e.stopPropagation();
+  if (!IS_CONFIGURED) { showToast('Configura Firebase primero', true); return; }
+  await db.ref(`parkoffice/${id}`).remove();
+  showToast('Puesto liberado', false);
+}
+
+/* ── EMAILJS ───────────────────────────────── */
+async function enviarCorreo(nombre, email, label) {
+  if (!IS_CONFIGURED) return;
+  try {
+    await emailjs.send(EMAILJS_CONFIG.serviceId, EMAILJS_CONFIG.templateId, {
+      to_name:    nombre,
+      to_email:   email,
+      spot_label: label,
+      fecha:      new Date().toLocaleDateString('es-CO', { weekday:'long', day:'numeric', month:'long' }),
+      hora:       new Date().toLocaleTimeString('es-CO', { hour:'2-digit', minute:'2-digit' })
+    });
+  } catch(e) {
+    console.warn('EmailJS error:', e);
+  }
+}
+
+/* ── TOAST ─────────────────────────────────── */
+function showToast(msg, esError = false) {
+  const t = document.getElementById('toast');
+  const dot = document.getElementById('toast-dot');
+  document.getElementById('toast-msg').textContent = msg;
+  dot.className = 'toast-dot' + (esError ? ' red' : '');
+  t.classList.remove('show');
+  void t.offsetWidth;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+/* ── SACUDIR MODAL ─────────────────────────── */
+function sacudirModal() {
+  const m = document.getElementById('modal');
+  m.style.animation = 'none'; void m.offsetWidth;
+  m.style.animation = 'shake 0.3s ease';
+}
+
+/* ── TECLADO ───────────────────────────────── */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+  if (e.key === 'Enter' && document.getElementById('modal-overlay').classList.contains('open')) confirmarReserva();
+});
+</script>
+
+<!--
+╔══════════════════════════════════════════════════════╗
+║              GUÍA DE CONFIGURACIÓN                   ║
+╠══════════════════════════════════════════════════════╣
+║                                                      ║
+║  PASO 1 — FIREBASE (base de datos tiempo real)       ║
+║  ─────────────────────────────────────────────────   ║
+║  1. Ve a https://console.firebase.google.com         ║
+║  2. "Crear proyecto" → ponle nombre → Continuar      ║
+║  3. Menú izquierdo → "Realtime Database" → Crear     ║
+║  4. Elige "Modo de prueba" por ahora → Aceptar       ║
+║  5. Menú izquierdo → Configuración ⚙️ → Tu app       ║
+║  6. Haz clic en </> (web) → registra la app          ║
+║  7. Copia el firebaseConfig y pégalo en              ║
+║     FIREBASE_CONFIG arriba                           ║
+║                                                      ║
+║  PASO 2 — EMAILJS (correos de notificación)          ║
+║  ─────────────────────────────────────────────────   ║
+║  1. Ve a https://www.emailjs.com → Sign up gratis    ║
+║  2. "Add New Service" → Gmail → conecta tu Gmail     ║
+║  3. "Email Templates" → Create New Template          ║
+║  4. En el template usa estas variables:              ║
+║     {{to_name}}    = nombre del que reservó          ║
+║     {{spot_label}} = ej: Puesto A1                   ║
+║     {{fecha}}      = fecha de la reserva             ║
+║     {{hora}}       = hora de la reserva              ║
+║  5. Copia Service ID, Template ID y Public Key       ║
+║     y pégalos en EMAILJS_CONFIG arriba               ║
+║                                                      ║
+║  PASO 3 — SUBIR LA PÁGINA                            ║
+║  ─────────────────────────────────────────────────   ║
+║  Opción A (fácil): https://app.netlify.com           ║
+║    → "Add new site" → "Deploy manually"              ║
+║    → arrastra este archivo HTML                      ║
+║    Te da un link tipo: https://xxxx.netlify.app      ║
+║                                                      ║
+║  Opción B: Firebase Hosting (mismo proyecto)         ║
+║    npm install -g firebase-tools                     ║
+║    firebase login && firebase init hosting           ║
+║    firebase deploy                                   ║
+║                                                      ║
+╚══════════════════════════════════════════════════════╝
+-->
+
+</body>
+</html>
