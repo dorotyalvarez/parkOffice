@@ -4,63 +4,68 @@
 
 /* ── CONFIGURACIÓN ────────────────────────────── */
 const FIREBASE_CONFIG = {
-  apiKey:            "AIzaSyBLGuzvcLTNUOSU_9NrFHTgBuUbRBpeS1o",
-  authDomain:        "parkin-c6e71.firebaseapp.com",
-  databaseURL:       "https://parkin-c6e71-default-rtdb.firebaseio.com",
-  projectId:         "parkin-c6e71",
-  storageBucket:     "parkin-c6e71.firebasestorage.app",
-  messagingSenderId: "674692362260",
-  appId:             "1:674692362260:web:1c97771b866a2862003701"
+    apiKey: "AIzaSyBLGuzvcLTNUOSU_9NrFHTgBuUbRBpeS1o",
+    authDomain: "parkin-c6e71.firebaseapp.com",
+    databaseURL: "https://parkin-c6e71-default-rtdb.firebaseio.com",
+    projectId: "parkin-c6e71",
+    storageBucket: "parkin-c6e71.firebasestorage.app",
+    messagingSenderId: "674692362260",
+    appId: "1:674692362260:web:1c97771b866a2862003701"
 };
 
 const EMAILJS_CONFIG = {
-  publicKey:  "Pdc2NDCbT43gFArza",
-  serviceId:  "service_vgiu9xq",
-  templateId: "template_evh4qny"
+    publicKey: "Pdc2NDCbT43gFArza",
+    serviceId: "service_vgiu9xq",
+    templateId: "template_evh4qny"
 };
 
 /* ── CONSTANTES ───────────────────────────────── */
-const LIMITE   = { carro: 2, moto: 4 };
-const DIAS     = ['Lun','Mar','Mié','Jue','Vie'];
-const DIAS_FULL= ['Lunes','Martes','Miércoles','Jueves','Viernes'];
+const LIMITE = { carro: 2, moto: 4 };
+const DIAS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie'];
+const DIAS_FULL = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
 
-const STRUCTURE = [
-  {
-    id: 'car', title: 'Parqueadero de carros',
-    dotClass: 'car', tipo: 'carro',
-    spots: [{ id: 'c1', label: 'Puesto C1', tipo: 'carro' }]
-  },
-  {
-    id: 'mA', title: 'Motos — Zona A',
-    dotClass: 'moto', tipo: 'moto',
-    spots: [
-      { id: 'mA1', label: 'Puesto A1', tipo: 'moto' },
-      { id: 'mA2', label: 'Puesto A2', tipo: 'moto' }
-    ]
-  },
-  {
-    id: 'mB', title: 'Motos — Zona B',
-    dotClass: 'moto', tipo: 'moto',
-    spots: [
-      { id: 'mB1', label: 'Puesto B1', tipo: 'moto' },
-      { id: 'mB2', label: 'Puesto B2', tipo: 'moto' }
-    ]
-  }
+const STRUCTURE = [{
+        id: 'car',
+        title: 'Parqueadero de carros',
+        dotClass: 'car',
+        tipo: 'carro',
+        spots: [{ id: 'c1', label: 'Puesto C1', tipo: 'carro' }]
+    },
+    {
+        id: 'mA',
+        title: 'Motos — Zona A',
+        dotClass: 'moto',
+        tipo: 'moto',
+        spots: [
+            { id: 'mA1', label: 'Puesto A1', tipo: 'moto' },
+            { id: 'mA2', label: 'Puesto A2', tipo: 'moto' }
+        ]
+    },
+    {
+        id: 'mB',
+        title: 'Motos — Zona B',
+        dotClass: 'moto',
+        tipo: 'moto',
+        spots: [
+            { id: 'mB1', label: 'Puesto B1', tipo: 'moto' },
+            { id: 'mB2', label: 'Puesto B2', tipo: 'moto' }
+        ]
+    }
 ];
 
 const ICONS = {
-  carro: `<svg viewBox="0 0 24 24"><path d="M5 17H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1l2-3h12l2 3h1a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="17.5" r="2.5"/></svg>`,
-  moto:  `<svg viewBox="0 0 24 24"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6h2l2 5M15 6l-3 5H8.5L7 8h5"/><path d="M2 12h3.5"/></svg>`
+    carro: `<svg viewBox="0 0 24 24"><path d="M5 17H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1l2-3h12l2 3h1a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="17.5" r="2.5"/></svg>`,
+    moto: `<svg viewBox="0 0 24 24"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6h2l2 5M15 6l-3 5H8.5L7 8h5"/><path d="M2 12h3.5"/></svg>`
 };
 
 /* ── ESTADO GLOBAL ────────────────────────────── */
-let db             = null;
-let selSpot        = null;   // { id, label, tipo }
-let selDiasIdx     = [];     // días seleccionados en el modal
-let selLiberarKey  = null;   // { spotId, diaIdx }
-let selAvisoId     = null;
+let db = null;
+let selSpot = null; // { id, label, tipo }
+let selDiasIdx = []; // días seleccionados en el modal
+let selLiberarKey = null; // { spotId, diaIdx }
+let selAvisoId = null;
 
-let miEmail  = localStorage.getItem('po_email')  || null;
+let miEmail = localStorage.getItem('po_email') || null;
 let miNombre = localStorage.getItem('po_nombre') || null;
 
 const IS_CONFIGURED = FIREBASE_CONFIG.apiKey !== 'TU_API_KEY';
@@ -69,127 +74,129 @@ const IS_CONFIGURED = FIREBASE_CONFIG.apiKey !== 'TU_API_KEY';
    INIT
    ════════════════════════════════════════════════ */
 window.addEventListener('DOMContentLoaded', () => {
-  renderFecha();
-  registrarSW();
-  escucharConexion();
+    renderFecha();
+    registrarSW();
+    escucharConexion();
 
-  if (!IS_CONFIGURED) {
-    document.getElementById('cfg-banner').classList.add('visible');
-    renderUI({}, {});
-    return;
-  }
+    if (!IS_CONFIGURED) {
+        document.getElementById('cfg-banner').classList.add('visible');
+        renderUI({}, {});
+        return;
+    }
 
-  firebase.initializeApp(FIREBASE_CONFIG);
-  emailjs.init(EMAILJS_CONFIG.publicKey);
-  db = firebase.database();
+    firebase.initializeApp(FIREBASE_CONFIG);
+    emailjs.init(EMAILJS_CONFIG.publicKey);
+    db = firebase.database();
 
-  checkResetSemanal();
-  escucharCambios();
+    checkResetSemanal();
+    escucharCambios();
 });
 
 function renderFecha() {
-  document.getElementById('date-pill').textContent =
-    new Date().toLocaleDateString('es-CO', { weekday:'short', day:'numeric', month:'short' }).toUpperCase();
+    document.getElementById('date-pill').textContent =
+        new Date().toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase();
 }
 
 /* ════════════════════════════════════════════════
    SERVICE WORKER — PWA
    ════════════════════════════════════════════════ */
 function registrarSW() {
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').catch(e => console.warn('SW error:', e));
-  }
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(e => console.warn('SW error:', e));
+    }
 }
 
 /* ════════════════════════════════════════════════
    CONEXIÓN — banner offline
    ════════════════════════════════════════════════ */
 function escucharConexion() {
-  const banner = document.getElementById('offline-banner');
-  window.addEventListener('online',  () => banner.classList.remove('visible'));
-  window.addEventListener('offline', () => banner.classList.add('visible'));
-  if (!navigator.onLine) banner.classList.add('visible');
+    const banner = document.getElementById('offline-banner');
+    window.addEventListener('online', () => banner.classList.remove('visible'));
+    window.addEventListener('offline', () => banner.classList.add('visible'));
+    if (!navigator.onLine) banner.classList.add('visible');
 }
 
 /* ════════════════════════════════════════════════
    RESET SEMANAL — sábado a medianoche
    ════════════════════════════════════════════════ */
 async function checkResetSemanal() {
-  const ref  = db.ref('meta/lastReset');
-  const snap = await ref.once('value');
-  const lastReset = snap.val() || 0;
+    const ref = db.ref('meta/lastReset');
+    const snap = await ref.once('value');
+    const lastReset = snap.val() || 0;
 
-  const now  = new Date();
-  const dia  = now.getDay(); // 0=Dom, 6=Sab
-  const diasDesdeSab = (dia + 1) % 7;
-  const sabPasado = new Date(now);
-  sabPasado.setDate(now.getDate() - diasDesdeSab);
-  sabPasado.setHours(0, 0, 0, 0);
+    const now = new Date();
+    const dia = now.getDay(); // 0=Dom, 6=Sab
+    const diasDesdeSab = (dia + 1) % 7;
+    const sabPasado = new Date(now);
+    sabPasado.setDate(now.getDate() - diasDesdeSab);
+    sabPasado.setHours(0, 0, 0, 0);
 
-  if (lastReset < sabPasado.getTime()) {
-    await Promise.all([
-      db.ref('parkoffice').remove(),
-      db.ref('historial').remove(),
-      db.ref('avisos').remove(),
-      ref.set(Date.now())
-    ]);
-    showToast('Semana nueva — parqueaderos liberados 🎉');
-  }
+    if (lastReset < sabPasado.getTime()) {
+        await Promise.all([
+            db.ref('parkoffice').remove(),
+            db.ref('historial').remove(),
+            db.ref('avisos').remove(),
+            ref.set(Date.now())
+        ]);
+        showToast('Semana nueva — parqueaderos liberados 🎉');
+    }
 }
 
 /* ════════════════════════════════════════════════
    FIREBASE — escucha tiempo real
    ════════════════════════════════════════════════ */
 function escucharCambios() {
-  db.ref('parkoffice').on('value', snapSpots => {
-    db.ref('historial').once('value', snapHist => {
-      const data = snapSpots.val() || {};
-      renderUI(data, snapHist.val() || {});
-      if (miEmail) renderQuota(data);
+    db.ref('parkoffice').on('value', snapSpots => {
+        db.ref('historial').once('value', snapHist => {
+            const data = snapSpots.val() || {};
+            renderUI(data, snapHist.val() || {});
+            if (miEmail) renderQuota(data);
+        });
+    }, err => {
+        console.error('Firebase error:', err);
+        showToast('Error de conexión con la base de datos', true);
     });
-  }, err => {
-    console.error('Firebase error:', err);
-    showToast('Error de conexión con la base de datos', true);
-  });
 }
 
 /* ════════════════════════════════════════════════
    RENDER PRINCIPAL
    ════════════════════════════════════════════════ */
 function renderUI(data, historial) {
-  const container = document.getElementById('main-content');
-  container.innerHTML = '';
+    const container = document.getElementById('main-content');
+    container.innerHTML = '';
 
-  const hoy = getDiaHoy();
-  let libresHoy = 0, ocupHoy = 0, total = 0;
+    const hoy = getDiaHoy();
+    let libresHoy = 0,
+        ocupHoy = 0,
+        total = 0;
 
-  STRUCTURE.forEach((section, si) => {
-    if (si > 0) {
-      const hr = document.createElement('hr');
-      hr.className = 'divider';
-      container.appendChild(hr);
-    }
+    STRUCTURE.forEach((section, si) => {
+                if (si > 0) {
+                    const hr = document.createElement('hr');
+                    hr.className = 'divider';
+                    container.appendChild(hr);
+                }
 
-    const sec = document.createElement('div');
-    sec.className = 'section';
-    const libresZona = section.spots.filter(s => !data[`${s.id}_${hoy}`]?.ocupado).length;
+                const sec = document.createElement('div');
+                sec.className = 'section';
+                const libresZona = section.spots.filter(s => !data[`${s.id}_${hoy}`] ? .ocupado).length;
 
-    sec.innerHTML = `
+                sec.innerHTML = `
       <div class="section-hdr">
         <div class="section-dot ${section.dotClass}"></div>
         <span class="section-title">${section.title}</span>
         <span class="section-count">${libresZona}/${section.spots.length} hoy</span>
       </div>
     `;
-    container.appendChild(sec);
+                container.appendChild(sec);
 
-    section.spots.forEach(s => {
-      const card = document.createElement('div');
-      card.className = 'spot-card';
+                section.spots.forEach(s => {
+                            const card = document.createElement('div');
+                            card.className = 'spot-card';
 
-      const diasLibres = DIAS.filter((_, i) => !data[`${s.id}_${i}`]?.ocupado).length;
+                            const diasLibres = DIAS.filter((_, i) => !data[`${s.id}_${i}`] ? .ocupado).length;
 
-      card.innerHTML = `
+                            card.innerHTML = `
         <div class="spot-header">
           <div class="spot-icon-wrap ${s.tipo}">
             <i class="ti ${s.tipo === 'carro' ? 'ti-car' : 'ti-motorbike'}" aria-hidden="true"></i>
@@ -201,20 +208,20 @@ function renderUI(data, historial) {
         </div>
         <div class="week-grid" id="wg-${s.id}"></div>
       `;
-      sec.appendChild(card);
+                            sec.appendChild(card);
 
-      const grid = card.querySelector(`#wg-${s.id}`);
-      DIAS.forEach((dNombre, i) => {
-        const key = `${s.id}_${i}`;
-        const res = data[key];
-        const esMio = res?.email === miEmail && res?.ocupado;
-        const cls   = esMio ? 'mio' : res?.ocupado ? 'ocupado' : 'libre';
-        const esHoy = i === hoy;
+                            const grid = card.querySelector(`#wg-${s.id}`);
+                            DIAS.forEach((dNombre, i) => {
+                                        const key = `${s.id}_${i}`;
+                                        const res = data[key];
+                                        const esMio = res ? .email === miEmail && res ? .ocupado;
+                                        const cls = esMio ? 'mio' : res ? .ocupado ? 'ocupado' : 'libre';
+                                        const esHoy = i === hoy;
 
-        const cell = document.createElement('div');
-        cell.className = `day-cell ${cls}${esHoy ? ' hoy' : ''}`;
-        cell.id = `cell-${key}`;
-        cell.innerHTML = `
+                                        const cell = document.createElement('div');
+                                        cell.className = `day-cell ${cls}${esHoy ? ' hoy' : ''}`;
+                                        cell.id = `cell-${key}`;
+                                        cell.innerHTML = `
           <div class="day-name">${dNombre}</div>
           <div class="day-num">${esHoy ? 'hoy' : i + 1}</div>
           <div class="day-badge ${cls}">${esMio ? 'Tuyo' : res?.ocupado ? 'Ocup.' : 'Libre'}</div>
@@ -304,7 +311,7 @@ function renderHistorial(historial) {
    ════════════════════════════════════════════════ */
 function abrirModal(spot, diaPreseleccionado) {
   selSpot    = spot;
-  selDiasIdx = [diaPreseleccionado];
+ selDiasIdx = diaPreseleccionado >= getDiaHoy() ? [diaPreseleccionado] : [];
 
   document.getElementById('modal-icon').innerHTML    = ICONS[spot.tipo];
   document.getElementById('modal-title-el').textContent = `Reservar ${spot.label}`;
@@ -313,6 +320,8 @@ function abrirModal(spot, diaPreseleccionado) {
   document.getElementById('inp-email').value = miEmail  || '';
 
   renderChipsDias();
+  // Al inicio de renderChipsDias, limpiar días pasados de la selección
+selDiasIdx = selDiasIdx.filter(i => i >= getDiaHoy());
   document.getElementById('modal-overlay').classList.add('open');
   setTimeout(() => {
     const inp = miNombre ? document.getElementById('inp-email') : document.getElementById('inp-name');
