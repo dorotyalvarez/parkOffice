@@ -304,7 +304,7 @@ function renderHistorial(historial) {
    ════════════════════════════════════════════════ */
 function abrirModal(spot, diaPreseleccionado) {
   selSpot    = spot;
-  selDiasIdx = diaPreseleccionado >= getDiaHoy() ? [diaPreseleccionado] : [];
+  selDiasIdx = [];
 
   document.getElementById('modal-icon').innerHTML    = ICONS[spot.tipo];
   document.getElementById('modal-title-el').textContent = `Reservar ${spot.label}`;
@@ -324,34 +324,31 @@ function renderChipsDias() {
   const container = document.getElementById('modal-dias');
   container.innerHTML = '';
   if (!selSpot) return;
-  // Limpiar días pasados de la selección
-  selDiasIdx = selDiasIdx.filter(i => i >= getDiaHoy());
 
-  // Obtener estado actual desde Firebase
   db.ref('parkoffice').once('value', snap => {
     const data = snap.val() || {};
     DIAS.forEach((d, i) => {
-      const key    = `${selSpot.id}_${i}`;
-      const res    = data[key];
-      const esMio  = res?.email === miEmail && res?.ocupado;
-      const pasado = i < getDiaHoy();
-      const bloqueado = (res?.ocupado && !esMio) || pasado;
+      const pasado  = i < getDiaHoy();
+      const key     = `${selSpot.id}_${i}`;
+      const res     = data[key];
+      const esMio   = res?.email === miEmail && res?.ocupado;
+      const ocupado = res?.ocupado && !esMio;
 
       const chip = document.createElement('div');
-      chip.className = 'dia-chip' +
-        (selDiasIdx.includes(i) ? ' sel' : '') +
-        (bloqueado ? ' ocup' : '');
-      chip.textContent = pasado ? `${d} ✗` : d;
-      chip.title = pasado ? 'Día ya pasado' : '';
 
-      if (!bloqueado) {
+      if (pasado) {
+        chip.className = 'dia-chip ocup';
+        chip.textContent = d + ' — pasado';
+      } else if (ocupado) {
+        chip.className = 'dia-chip ocup';
+        chip.textContent = d;
+      } else {
+        chip.className = 'dia-chip' + (selDiasIdx.includes(i) ? ' sel' : '');
+        chip.textContent = d;
         chip.onclick = () => {
-          if (esMio) return;
-          if (selDiasIdx.includes(i)) {
-            selDiasIdx = selDiasIdx.filter(x => x !== i);
-          } else {
-            selDiasIdx.push(i);
-          }
+          selDiasIdx = selDiasIdx.includes(i)
+            ? selDiasIdx.filter(x => x !== i)
+            : [...selDiasIdx, i];
           renderChipsDias();
         };
       }
