@@ -2,24 +2,30 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#1D9E75">
+  <meta name="description" content="Reserva tu parqueadero de oficina">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ParkOffice">
   <title>ParkOffice</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🅿️</text></svg>">
-
-  <!-- Google Fonts -->
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="manifest" href="manifest.json">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <!-- Estilos -->
   <link rel="stylesheet" href="style.css">
-
-  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-  <!-- EmailJS -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
 
 <div class="app">
+
+  <!-- OFFLINE BANNER -->
+  <div class="offline-banner" id="offline-banner">
+    <i class="ti ti-wifi-off"></i> Sin conexión — reconectando...
+  </div>
 
   <!-- HEADER -->
   <div class="header">
@@ -29,77 +35,70 @@
       </div>
       <div class="brand-name">Park<span>Office</span></div>
     </div>
-    <div class="date-pill" id="date-pill">—</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button class="share-btn" id="share-btn" onclick="compartirLink()" aria-label="Compartir link">
+        <i class="ti ti-share"></i>
+      </button>
+      <div class="date-pill" id="date-pill">—</div>
+    </div>
   </div>
 
-  <!-- BANNER CONFIG -->
+  <!-- CONFIG BANNER -->
   <div class="config-banner" id="cfg-banner">
     <strong>⚙️ Configura Firebase y EmailJS</strong>
     Abre app.js y pega tus claves en FIREBASE_CONFIG y EMAILJS_CONFIG.
   </div>
 
-  <!-- MIS RESERVAS RESTANTES -->
-  <div class="my-quota" id="my-quota" style="display:none">
+  <!-- QUOTA -->
+  <div class="quota-bar" id="quota-bar" style="display:none">
     <div class="quota-item">
-      <span class="quota-icon">🚗</span>
-      <span class="quota-label">Carros restantes</span>
-      <span class="quota-val" id="quota-car">2</span>
+      <i class="ti ti-car" aria-hidden="true"></i>
+      <span class="quota-label">Carros esta semana</span>
+      <div class="quota-pips" id="pips-car"></div>
     </div>
     <div class="quota-item">
-      <span class="quota-icon">🏍️</span>
-      <span class="quota-label">Motos restantes</span>
-      <span class="quota-val" id="quota-moto">4</span>
+      <i class="ti ti-motorbike" aria-hidden="true"></i>
+      <span class="quota-label">Motos esta semana</span>
+      <div class="quota-pips" id="pips-moto"></div>
     </div>
   </div>
 
   <!-- STATS -->
   <div class="stats">
-    <div class="stat">
-      <div class="stat-val green" id="s-libre">—</div>
-      <div class="stat-lbl">Disponibles</div>
-    </div>
-    <div class="stat">
-      <div class="stat-val red" id="s-ocup">—</div>
-      <div class="stat-lbl">Ocupados</div>
-    </div>
-    <div class="stat">
-      <div class="stat-val" id="s-total">5</div>
-      <div class="stat-lbl">Total</div>
-    </div>
+    <div class="stat"><div class="stat-val green" id="s-libre">—</div><div class="stat-lbl">Libres hoy</div></div>
+    <div class="stat"><div class="stat-val red"   id="s-ocup">—</div><div class="stat-lbl">Ocupados</div></div>
+    <div class="stat"><div class="stat-val"       id="s-total">5</div><div class="stat-lbl">Total</div></div>
   </div>
 
   <!-- PARQUEADEROS -->
   <div id="main-content">
     <div class="loading">
-      <div class="loading-dot"></div>
-      <div class="loading-dot"></div>
-      <div class="loading-dot"></div>
+      <div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div>
     </div>
   </div>
 
   <!-- HISTORIAL -->
   <div class="historial-section">
     <div class="historial-hdr">
-      <div class="section-dot car" style="background:var(--text3)"></div>
-      <span class="section-title">Historial de esta semana</span>
+      <i class="ti ti-history" aria-hidden="true" style="font-size:14px;color:var(--text3)"></i>
+      <span class="section-title">Historial de la semana</span>
     </div>
-    <div id="historial-list">
-      <div class="historial-empty">Sin reservas esta semana</div>
-    </div>
+    <div id="historial-list"><div class="historial-empty">Sin reservas esta semana</div></div>
   </div>
 
-</div><!-- .app -->
+</div>
 
 <!-- MODAL RESERVA -->
-<div class="modal-overlay" id="modal-overlay">
+<div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title-el">
   <div class="modal" id="modal">
     <div class="modal-spot-icon" id="modal-icon"></div>
-    <div class="modal-title" id="modal-title">Reservar puesto</div>
-    <div class="modal-sub" id="modal-sub">Ingresa tus datos para confirmar</div>
+    <div class="modal-title" id="modal-title-el">Reservar</div>
+    <div class="modal-sub"   id="modal-sub">Confirma tu reserva</div>
     <label for="inp-name">Tu nombre</label>
-    <input type="text"  id="inp-name"  placeholder="Ej: Camila Rodríguez" maxlength="30" autocomplete="off"/>
+    <input type="text"  id="inp-name"  placeholder="Ej: Daniel Álvarez" maxlength="30" autocomplete="off"/>
     <label for="inp-email">Tu correo</label>
     <input type="email" id="inp-email" placeholder="tuemail@empresa.com" autocomplete="off"/>
+    <div class="modal-dias" id="modal-dias"></div>
     <div class="modal-btns">
       <button class="btn btn-cancel"  onclick="closeModal()">Cancelar</button>
       <button class="btn btn-confirm" id="btn-confirm" onclick="confirmarReserva()">Reservar</button>
@@ -107,10 +106,23 @@
   </div>
 </div>
 
+<!-- MODAL CONFIRMAR LIBERAR -->
+<div class="modal-overlay" id="modal-liberar-overlay" role="dialog" aria-modal="true">
+  <div class="modal" id="modal-liberar">
+    <div class="modal-spot-icon" style="font-size:28px">⚠️</div>
+    <div class="modal-title">¿Liberar este día?</div>
+    <div class="modal-sub" id="liberar-sub">Esta acción no se puede deshacer</div>
+    <div class="modal-btns">
+      <button class="btn btn-cancel"  onclick="closeLiberarModal()">Cancelar</button>
+      <button class="btn btn-danger"  id="btn-liberar-confirm" onclick="confirmarLiberar()">Sí, liberar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL AVISO LIBERACIÓN -->
-<div class="modal-overlay" id="modal-aviso-overlay">
+<div class="modal-overlay" id="modal-aviso-overlay" role="dialog" aria-modal="true">
   <div class="modal" id="modal-aviso">
-    <div class="modal-spot-icon">🔔</div>
+    <div class="modal-spot-icon" style="font-size:28px">🔔</div>
     <div class="modal-title">Avisarme cuando se libere</div>
     <div class="modal-sub" id="aviso-sub">Te mandamos un correo cuando quede libre</div>
     <label for="aviso-name">Tu nombre</label>
@@ -125,7 +137,7 @@
 </div>
 
 <!-- TOAST -->
-<div class="toast" id="toast">
+<div class="toast" id="toast" role="status" aria-live="polite">
   <div class="toast-dot" id="toast-dot"></div>
   <span id="toast-msg"></span>
 </div>
