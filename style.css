@@ -142,6 +142,7 @@ body {
 .day-cell.ocupado { cursor: default; opacity: 0.7; }
 .day-cell.mio     { border-color: rgba(29,158,117,0.4); background: rgba(29,158,117,0.06); }
 .day-cell.hoy .day-num { color: var(--green); }
+.day-cell.pasado { opacity: 0.35; cursor: not-allowed; }
 
 .day-name { font-size: 9px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 3px; }
 .day-num  { font-size: 12px; font-weight: 500; color: var(--text); margin-bottom: 4px; }

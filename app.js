@@ -222,7 +222,7 @@ function renderUI(data, historial) {
           ${esMio ? `<button class="day-liberar" onclick="pedirLiberar('${s.id}','${i}','${s.label}','${dNombre}',event)">Liberar</button>` : ''}
           ${res?.ocupado && !esMio ? `<button class="day-liberar" style="color:var(--amber)" onclick="abrirAvisoModal('${key}','${s.label} — ${dNombre}',event)">Avisarme</button>` : ''}
         `;
-        if (!res?.ocupado) cell.onclick = () => abrirModal(s, i);
+        if (!res?.ocupado && i >= hoy) cell.onclick = () => abrirModal(s, i);
         grid.appendChild(cell);
 
         total++;
@@ -329,20 +329,22 @@ function renderChipsDias() {
   db.ref('parkoffice').once('value', snap => {
     const data = snap.val() || {};
     DIAS.forEach((d, i) => {
-      const key = `${selSpot.id}_${i}`;
-      const res = data[key];
-      const esMio   = res?.email === miEmail && res?.ocupado;
-      const ocupado = res?.ocupado && !esMio;
+      const key    = `${selSpot.id}_${i}`;
+      const res    = data[key];
+      const esMio  = res?.email === miEmail && res?.ocupado;
+      const pasado = i < getDiaHoy();
+      const bloqueado = (res?.ocupado && !esMio) || pasado;
 
       const chip = document.createElement('div');
       chip.className = 'dia-chip' +
         (selDiasIdx.includes(i) ? ' sel' : '') +
-        (ocupado ? ' ocup' : '');
-      chip.textContent = d;
+        (bloqueado ? ' ocup' : '');
+      chip.textContent = pasado ? `${d} ✗` : d;
+      chip.title = pasado ? 'Día ya pasado' : '';
 
-      if (!ocupado) {
+      if (!bloqueado) {
         chip.onclick = () => {
-          if (esMio) return; // ya reservado por ti
+          if (esMio) return;
           if (selDiasIdx.includes(i)) {
             selDiasIdx = selDiasIdx.filter(x => x !== i);
           } else {
